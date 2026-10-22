@@ -394,6 +394,17 @@ class Studio:
         self.store.update_job(job_id, status="failed", error=detail, finished=time.time())
 
     # --- generation -------------------------------------------------------------------
+    def _progress(self, job_id: str, stage: str, media_ids: Sequence[str]) -> None:
+        """Merge Flow progress into the existing result under the profile's job lock."""
+        job = self.store.job(job_id)
+        result = json.loads(job["result"]) if job and job["result"] else {}
+        stages = ("submitted", "generated", "delivered")
+        previous = result.get("stage")
+        if previous not in stages or stages.index(stage) > stages.index(previous):
+            result["stage"] = stage
+        result["media_ids"] = list(dict.fromkeys([*result.get("media_ids", []), *media_ids]))
+        self.store.update_job(job_id, result=result)
+
     def _out_dir(self, requested: Path | None) -> Path:
         out = requested or paths.output_dir()
         out.mkdir(parents=True, exist_ok=True)
@@ -501,6 +512,7 @@ class Studio:
             for media_id in media_ids:
                 await flow.attach_reference(media_id)
             results = await self._submit_guarded(lambda: flow.generate_images(request.prompt))
+            self._progress(job_id, "generated", [r.media_id for r in results])
             stem = time.strftime("%Y%m%d-%H%M%S") + f"-image-{job_id[:6]}"
             notes: list[str] = []
             files = await self._download_all(
@@ -517,6 +529,7 @@ class Studio:
                 "project_id": project_id,
                 "files": files,
                 "media_ids": [r.media_id for r in results],
+                "stage": "delivered",
                 "sizes": [[r.width, r.height] for r in results],
                 "seconds": round(time.time() - started, 1),
             }
@@ -592,7 +605,12 @@ class Studio:
             if options.mode is VideoMode.INGREDIENTS:
                 for media_id in ref_ids:
                     await flow.attach_reference(media_id)
-            clips = await self._submit_guarded(lambda: flow.generate_video(request.prompt))
+            clips = await self._submit_guarded(
+                lambda: flow.generate_video(
+                    request.prompt, on_ids=lambda ids: self._progress(job_id, "submitted", ids)
+                )
+            )
+            self._progress(job_id, "generated", [c.media_id for c in clips])
             stem = time.strftime("%Y%m%d-%H%M%S") + f"-video-{job_id[:6]}"
             notes: list[str] = []
             files = await self._download_all(
@@ -609,6 +627,7 @@ class Studio:
                 "project_id": project_id,
                 "files": files,
                 "media_ids": [c.media_id for c in clips],
+                "stage": "delivered",
                 "credits": credits,
                 "credits_left": flow.credits_left,
                 "seconds": round(time.time() - started, 1),
