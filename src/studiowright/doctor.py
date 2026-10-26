@@ -110,7 +110,8 @@ async def check_project_page(doctor: Doctor, flow: FlowPage) -> None:
     async def prompt_box() -> str:
         await need(s.COMPOSER, "the prompt text field")
         await need(s.SUBMIT, "the generate button")
-        await page.locator(s.PICKER_OPEN).first.click()
+        # The picker button is there in image mode; a video "frames" box has start/end slots.
+        await page.locator(s.PICKER_OPEN).first.click(timeout=5000)
         await need(s.PICKER_SEARCH, "the media picker's search field")
         await close_popups()
         return "text field, generate button, media picker with search"
@@ -213,8 +214,9 @@ async def check_project_page(doctor: Doctor, flow: FlowPage) -> None:
         if not await doctor.run(name, probe):
             await close_popups()  # a failed check can leave a menu or pane open
 
+    await flow.reset()
+    await step("image options", image_options)  # also leaves the prompt box in image mode
     await step("prompt box", prompt_box)
-    await step("image options", image_options)
     await step("image models", lambda: models(s.MODE_IMAGE, [m.label for m in ImageModel]))
     await step("video options and price", video_options)
     await step("video models", lambda: models(s.MODE_VIDEO, [m.label for m in VideoModel]))
