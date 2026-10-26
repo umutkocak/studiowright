@@ -1,6 +1,6 @@
 [project]
 name = "studiowright"
-version = "0.2.10"
+version = "0.2.11"
 description = "StudioWright: a fast CLI and MCP server for Google Flow and Google Flow Music. Unofficial; not affiliated with Google."
 readme = "README.md"
 license = "MIT"

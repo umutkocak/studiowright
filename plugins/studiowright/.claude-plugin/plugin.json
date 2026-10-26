@@ -1,6 +1,6 @@
 {
   "name": "studiowright",
-  "version": "0.2.10",
+  "version": "0.2.11",
   "description": "Generate Google Flow images and videos and Google Flow Music songs, edits and stems from Claude Code, through your own signed-in Chrome and subscriptions. Unofficial; not affiliated with Google.",
   "author": {
     "name": "Umut Koçak"
