@@ -13,7 +13,7 @@ import contextlib
 import logging
 import re
 import time
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -785,11 +785,19 @@ class FlowPage:
             for media_id, kind, title in await self.page.evaluate(GRID_TILES_JS)
         ]
 
-    async def generate_video(self, prompt: str, timeout_s: float = 600) -> list[VideoClip]:
+    async def generate_video(
+        self,
+        prompt: str,
+        timeout_s: float = 600,
+        *,
+        on_ids: Callable[[list[str]], None] | None = None,
+    ) -> list[VideoClip]:
         """Submit and follow the clip(s) until their signed URLs arrive.
 
         Flow's submit RPC differs per mode and can change, so the new clips are recognised
         by shape: any record of this project that appears queued or running after the click.
+        ``on_ids`` receives a snapshot whenever a new media id is accepted, before URLs
+        arrive. Observer errors are logged without interrupting the generation.
         """
         async with ReplyWatch(self.page, None) as watch:
             await self._type_and_submit(prompt)
@@ -828,6 +836,11 @@ class FlowPage:
                         ):
                             new_ids.add(record.media_id)
                             log.info("clip %s accepted via %s", record.media_id, rpc_id)
+                            if on_ids is not None:
+                                try:
+                                    on_ids(sorted(new_ids))
+                                except Exception:
+                                    log.exception("could not report accepted clip ids")
                         if record.media_id in new_ids:
                             previous = records.get(record.media_id)
                             if previous is None or previous.status != record.status:

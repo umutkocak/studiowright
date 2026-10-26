@@ -511,7 +511,8 @@ to hide it). Run with `sw -v …` to see each step. A failed job leaves a screen
 <summary><b>A clip finished in Flow but the command timed out</b></summary>
 
 `sw download <media id>` fetches it without generating again. The timeout message prints
-the ids.
+the ids, and the job's record keeps them as soon as Flow accepts the clip (`flow_status`
+shows them), even if the job was interrupted.
 </details>
 
 <details>
