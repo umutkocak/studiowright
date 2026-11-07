@@ -23,6 +23,12 @@ SETTINGS_PANE = f"{OVERLAY}:has([role='radiogroup'])"
 RADIO = "[role='radio']"
 MENU_ITEM = "[role='menuitem']"
 MODEL_MENU_BUTTON = f"button{icon('arrow_drop_down')}"
+#: A model menu entry's name; a caption beside it may say when the model retires.
+MODEL_LABEL = "span.label"
+MODEL_CAPTION = "span.caption"
+#: Omni 1.2 picks its length (3-15 s) with a slider instead of radios (seen 2026-11-07).
+DURATION_SLIDER = "flow-duration-slider input[type='range']"
+DURATION_VALUE = "flow-duration-slider .duration-slider-value"
 
 BOX = "flow-prompt-box"
 COMPOSER = f"{BOX} [contenteditable='true']"

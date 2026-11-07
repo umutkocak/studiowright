@@ -26,7 +26,9 @@ StudioWright drives Google Flow's and Google Flow Music's web UIs in the user's 
   - Confirm with the user before making several clips or using Veo Quality.
   - `mode="frames"`: optional `start` and `end` frames (file or media id). With neither, it is text-to-video.
   - `mode="ingredients"`: `refs` are reference images.
-  - `resolution` (360p/720p) and `duration` (4/6/8/10 s) apply to Omni only.
+  - Models: `omni-flash` (Omni 1.1, the default), `omni-flash-1.2`, `veo-lite`, `veo-fast`, `veo-quality`. Flow retires Omni 1.1, Veo Fast and Veo Quality on 5 Dec 2026.
+  - `resolution` (360p/720p) and `duration` apply to Omni only: Omni 1.1 takes 4/6/8/10 s, Omni 1.2 any whole second from 3 to 15.
+  - Omni 1.2 at 720p costs 3 credits a second up to 10 s and 6 a second beyond (8 s = 24, twice Omni 1.1); at 360p 1 a second (2 beyond 10 s).
 - `size` downloads Flow's own other sizes: images `2K` (upscaled); clips `1080p` from a 720p clip, `720p` from a 360p clip, `270p` (GIF).
 - `flow_options` lists every model and option.
 

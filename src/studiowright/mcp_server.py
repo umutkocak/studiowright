@@ -12,7 +12,6 @@ from mcp.server.mcpserver import MCPServer
 from studiowright import paths
 from studiowright.flow.options import (
     COUNTS,
-    DURATIONS,
     RESOLUTIONS,
     VIDEO_ASPECTS,
     Aspect,
@@ -85,7 +84,9 @@ async def flow_options() -> dict[str, Any]:
             },
             "aspects": [a.value for a in VIDEO_ASPECTS],
             "resolutions (omni only)": list(RESOLUTIONS),
-            "durations_s (omni only)": list(DURATIONS),
+            "durations_s (omni only)": {
+                m.value: list(m.durations) for m in VideoModel if m.durations
+            },
             "counts": list(COUNTS),
         },
     }
@@ -144,7 +145,8 @@ async def flow_generate_video(
 
     mode "frames": optional start and end frame (file path or media id); text-to-video
     when neither is given. mode "ingredients": refs are reference images.
-    resolution and duration apply to Omni only. size: download size as Flow labels it
+    resolution and duration apply to Omni only: omni-flash takes 4/6/8/10 s, omni-flash-1.2
+    any whole number of seconds from 3 to 15. size: download size as Flow labels it
     (e.g. "1080p" upscaled from a 720p clip, "270p" GIF); default original.
     max_credits: refuse before submitting if Flow's stated price is higher.
     dry_run: return Flow's price without submitting (free); frames and refs are not

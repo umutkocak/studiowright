@@ -116,13 +116,21 @@ async def check_project_page(doctor: Doctor, flow: FlowPage) -> None:
         await close_popups()
         return "text field, generate button, media picker with search"
 
-    async def offered_models(mode_icon: str) -> list[str]:
+    async def offered_models(mode_icon: str) -> dict[str, str]:
+        """Each entry's model name and its caption (e.g. when Flow retires the model)."""
         pane = await flow._settings_pane()
         await flow._radio(pane, icon=mode_icon)
         await pane.locator(s.MODEL_MENU_BUTTON).first.click()
         items = page.locator(s.MENU_ITEM)
         await items.first.wait_for(state="visible", timeout=5000)
-        offered = [" ".join(text.split()) for text in await items.all_inner_texts()]
+        offered: dict[str, str] = {}
+        for index in range(await items.count()):
+            item = items.nth(index)
+            name = item.locator(s.MODEL_LABEL)
+            text = await (name.first if await name.count() else item).inner_text()
+            caption = item.locator(s.MODEL_CAPTION)
+            note = await caption.first.inner_text() if await caption.count() else ""
+            offered[" ".join(text.split())] = " ".join(note.split())
         await close_popups()
         return offered
 
@@ -146,9 +154,14 @@ async def check_project_page(doctor: Doctor, flow: FlowPage) -> None:
         return f"{len(Aspect)} aspects, 1-{max(COUNTS)} images"
 
     async def models(mode_icon: str, wanted: list[str]) -> str | tuple[str, str]:
-        missing = missing_labels(await offered_models(mode_icon), wanted)
-        if missing:
-            return WARN, f"not offered on this account: {', '.join(missing)}"
+        offered = await offered_models(mode_icon)
+        missing = missing_labels(list(offered), wanted)
+        notes = [f"{name}: {note}" for name, note in offered.items() if note and name in wanted]
+        problems = [f"not offered on this account: {', '.join(missing)}"] if missing else []
+        if notes:
+            problems.append("Flow notes " + "; ".join(notes))
+        if problems:
+            return WARN, ". ".join(problems)
         return f"all {len(wanted)} offered"
 
     async def video_options() -> str | tuple[str, str]:
@@ -157,6 +170,13 @@ async def check_project_page(doctor: Doctor, flow: FlowPage) -> None:
         if price is None:
             return WARN, "options set, but the credit price could not be read"
         return f"modes, Omni options and the price ({price} credits for the default clip)"
+
+    async def omni_1_2() -> str | tuple[str, str]:
+        options = VideoOptions.build("omni-flash-1.2", "frames", "16:9", "720p", 8, 1)
+        price = await flow.apply_video_options(options)
+        if price is None:
+            return WARN, "the 8 s length was set, but the credit price could not be read"
+        return f"the length slider and the price ({price} credits for 8 s at 720p)"
 
     async def grid() -> str | tuple[str, str]:
         await page.evaluate(SCROLL_TOP_JS, s.GRID_SCROLLER)
@@ -219,6 +239,7 @@ async def check_project_page(doctor: Doctor, flow: FlowPage) -> None:
     await step("prompt box", prompt_box)
     await step("image models", lambda: models(s.MODE_IMAGE, [m.label for m in ImageModel]))
     await step("video options and price", video_options)
+    await step("Omni 1.2 options and price", omni_1_2)
     await step("video models", lambda: models(s.MODE_VIDEO, [m.label for m in VideoModel]))
     await flow.reset()
     await step("grid and tile menu", grid)

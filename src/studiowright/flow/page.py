@@ -448,8 +448,12 @@ class FlowPage:
         if current.endswith(label):
             return
         await button.click()
-        item = self.page.locator(s.MENU_ITEM).filter(
-            has_text=re.compile(re.escape(label) + r"\s*$")
+        # The name has its own element; a caption after it ("removed on 5 Dec") means the
+        # entry's whole text no longer ends with the name. Older menus have no such element.
+        entries = self.page.locator(s.MENU_ITEM)
+        exact = re.compile(rf"^\s*{re.escape(label)}\s*$")
+        item = entries.filter(has=self.page.locator(s.MODEL_LABEL).filter(has_text=exact)).or_(
+            entries.filter(has_text=re.compile(re.escape(label) + r"\s*$"))
         )
         try:
             await item.first.wait_for(state="visible", timeout=5000)
@@ -458,6 +462,33 @@ class FlowPage:
             raise FlowError(f"the model {label!r} is not offered on this account") from exc
         await item.first.click()
         await self.page.wait_for_timeout(200)
+
+    async def _duration(self, pane: Locator, seconds: int) -> None:
+        """Pick the clip length: a radio (Omni 1.1) or the slider (Omni 1.2, 3-15 s)."""
+        if await pane.locator(s.RADIO).filter(has_text=duration_pattern(seconds)).count():
+            await self._radio(pane, text=duration_pattern(seconds))
+            return
+        slider = pane.locator(s.DURATION_SLIDER).first
+        if not await slider.count():
+            raise FlowError(f"Flow offers no {seconds} s duration here")
+        shown = pane.locator(s.DURATION_VALUE).first
+
+        async def current() -> int:
+            match = re.match(r"\s*(\d+)", await shown.inner_text())
+            if match is None:
+                raise FlowError("the duration slider shows no length")
+            return int(match.group(1))
+
+        await slider.focus()
+        for _ in range(32):
+            now = await current()
+            if now == seconds:
+                return
+            await slider.press("ArrowRight" if now < seconds else "ArrowLeft")
+            await self.page.wait_for_timeout(80)
+            if await current() == now:
+                raise FlowError(f"Flow offers no {seconds} s clip; the slider stops at {now} s")
+        raise FlowError(f"could not set the clip length to {seconds} s")
 
     async def apply_image_options(self, options: ImageOptions) -> None:
         lines = await self.chip_lines()
@@ -486,7 +517,7 @@ class FlowPage:
         if options.resolution:
             await self._radio(pane, text=options.resolution)
         if options.duration:
-            await self._radio(pane, text=duration_pattern(options.duration))
+            await self._duration(pane, options.duration)
         await self._radio(pane, text=count_pattern(options.count))
         await self.page.wait_for_timeout(200)
         price = credit_price(await pane.inner_text())

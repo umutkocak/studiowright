@@ -110,6 +110,12 @@ request the page signed would be circumvention. So:
   leading token (1K, 2K, 270p, 360p, 720p, 1080p, 4K). The button is disabled until the
   medium has loaded.
 
+**Omni 1.2 Flash (2026-11-07).** The model menu lists it first. Each entry keeps the
+model's name in `span.label`; Omni 1.1, Veo Fast and Veo Quality also carry a caption
+(`span.caption`, "removed on 5 Dec"), so an entry's whole text no longer ends with the
+name. Omni 1.2 picks its length with a slider (`flow-duration-slider`, a range input of
+13 steps for 3-15 s, keyboard-operable) instead of the 4/6/8/10 s radios Omni 1.1 keeps.
+
 ## Prices and pacing
 
 Upscales are paced on their own (60 s + jitter) and pause for an hour after a refusal;
@@ -122,6 +128,8 @@ running low" banner); StudioWright records it from video submit replies.
 | Image (any Nano Banana model) | 0 (daily quota) |
 | Omni Flash, 360p, 4 s | 4 |
 | Omni Flash, 720p, 4 / 6 / 8 / 10 s | 7 / 10 / 12 / 15 (not linear) |
+| Omni 1.2 Flash, 720p, 3-10 s / 11-15 s | 3 a second / 6 a second (8 s = 24, 15 s = 60) |
+| Omni 1.2 Flash, 360p, 3-10 s / 11-15 s | 1 a second / 2 a second (15 s = 20) |
 | Veo Lite / Fast / Quality | 10 / 10 or 20 / 100 (Fast: 10 on one account, 20 on another, 25 Oct 2026; a start frame does not change the price) |
 
 Prices are read from Flow's own settings pane before submitting (`--dry-run`,

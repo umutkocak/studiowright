@@ -31,6 +31,7 @@ class ImageModel(Enum):
 
 class VideoModel(Enum):
     OMNI_FLASH = "omni-flash"
+    OMNI_FLASH_1_2 = "omni-flash-1.2"
     VEO_LITE = "veo-lite"
     VEO_FAST = "veo-fast"
     VEO_QUALITY = "veo-quality"
@@ -39,6 +40,7 @@ class VideoModel(Enum):
     def label(self) -> str:
         return {
             VideoModel.OMNI_FLASH: "Omni 1.1 Flash",
+            VideoModel.OMNI_FLASH_1_2: "Omni 1.2 Flash",
             VideoModel.VEO_LITE: "Veo 3.1 - Lite",
             VideoModel.VEO_FAST: "Veo 3.1 - Fast",
             VideoModel.VEO_QUALITY: "Veo 3.1 - Quality",
@@ -47,7 +49,15 @@ class VideoModel(Enum):
     @property
     def has_length_and_resolution(self) -> bool:
         """Only Omni offers duration and resolution choices; Veo shows neither."""
-        return self is VideoModel.OMNI_FLASH
+        return self in (VideoModel.OMNI_FLASH, VideoModel.OMNI_FLASH_1_2)
+
+    @property
+    def durations(self) -> tuple[int, ...]:
+        """Clip lengths Flow offers: Omni 1.1 as 4/6/8/10 s radios, Omni 1.2 as a 3-15 s
+        slider (measured 2026-11-07); Veo none."""
+        if self is VideoModel.OMNI_FLASH_1_2:
+            return tuple(range(3, 16))
+        return DURATIONS if self.has_length_and_resolution else ()
 
 
 class Aspect(Enum):
@@ -142,8 +152,13 @@ class VideoOptions:
         if model_.has_length_and_resolution:
             if resolution not in RESOLUTIONS:
                 raise OptionError(f"resolution must be one of {RESOLUTIONS}, got {resolution}")
-            if duration not in DURATIONS:
-                raise OptionError(f"duration must be one of {DURATIONS} s, got {duration}")
+            if duration not in model_.durations:
+                offered = model_.durations
+                raise OptionError(
+                    f"duration for {model_.value} must be {offered[0]}-{offered[-1]} s"
+                    if len(offered) > 4
+                    else f"duration for {model_.value} must be one of {offered} s",
+                )
         else:
             resolution, duration = None, None
         return cls(model_, _parse_enum(VideoMode, mode), aspect_, resolution, duration, count)

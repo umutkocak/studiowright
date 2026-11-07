@@ -19,7 +19,6 @@ from playwright.async_api import Error as PlaywrightError
 from studiowright import __version__, chrome, paths
 from studiowright.flow.options import (
     COUNTS,
-    DURATIONS,
     RESOLUTIONS,
     Aspect,
     ImageModel,
@@ -380,10 +379,10 @@ def image(
 )
 @click.option(
     "--duration",
-    type=click.Choice([str(d) for d in DURATIONS]),
-    default="8",
+    type=int,
+    default=8,
     show_default=True,
-    help="Seconds; Omni only.",
+    help="Seconds; Omni only: 4/6/8/10 on omni-flash, 3-15 on omni-flash-1.2.",
 )
 @click.option(
     "--count", type=click.Choice([str(c) for c in COUNTS]), default="1", show_default=True
@@ -408,7 +407,7 @@ def video(
     refs: tuple[str, ...],
     aspect: str,
     resolution: str,
-    duration: str,
+    duration: int,
     count: str,
     project: str | None,
     out: Path | None,
@@ -425,7 +424,7 @@ def video(
     if mode == "ingredients" and (start or end):
         raise click.BadParameter("--start/--end need --mode frames", param_hint="--mode")
     try:
-        options = VideoOptions.build(model, mode, aspect, resolution, int(duration), int(count))
+        options = VideoOptions.build(model, mode, aspect, resolution, duration, int(count))
     except OptionError as exc:
         raise click.BadParameter(str(exc)) from exc
     request = VideoRequest(

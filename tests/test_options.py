@@ -80,3 +80,19 @@ def test_credit_price(text: str, price: int | None) -> None:
     from studiowright.flow.page import credit_price
 
     assert credit_price(text) == price
+
+
+def test_omni_1_2_takes_any_whole_second_from_3_to_15() -> None:
+    for seconds in (3, 5, 7, 12, 15):
+        opts = o.VideoOptions.build(model="omni-flash-1.2", resolution="720p", duration=seconds)
+        assert (opts.model.label, opts.duration) == ("Omni 1.2 Flash", seconds)
+    for seconds in (2, 16):
+        with pytest.raises(o.OptionError, match="3-15 s"):
+            o.VideoOptions.build(model="omni-flash-1.2", duration=seconds)
+    with pytest.raises(o.OptionError, match="resolution"):
+        o.VideoOptions.build(model="omni-flash-1.2", resolution="1080p")
+    # Omni 1.1 keeps its four radios.
+    assert o.VideoModel.OMNI_FLASH.durations == (4, 6, 8, 10)
+    with pytest.raises(o.OptionError, match=r"\(4, 6, 8, 10\)"):
+        o.VideoOptions.build(model="omni-flash", duration=5)
+    assert o.VideoModel.VEO_LITE.durations == ()

@@ -110,9 +110,11 @@ What makes it different:
   allows.
 
 **Video (Google Flow)**
-- Omni Flash (default), Veo 3.1 Lite, Fast and Quality.
+- Omni 1.1 Flash (default), Omni 1.2 Flash, Veo 3.1 Lite, Fast and Quality. Flow retires
+  Omni 1.1, Veo Fast and Veo Quality on 5 December 2026 (its menu says so).
 - Text only, start frame, start and end frames, or ingredients (several reference images).
-- Omni: 360p / 720p and 4, 6, 8 or 10 s. Aspect 16:9 or 9:16.
+- Omni: 360p / 720p. Omni 1.1 runs 4, 6, 8 or 10 s; Omni 1.2 any whole number of seconds
+  from 3 to 15. Aspect 16:9 or 9:16.
 - Downloads at 720p, 1080p or 4K (upscaled by Flow), or as a GIF.
 - `--dry-run` shows Flow's price without submitting; `--max-credits` refuses anything
   more expensive.
@@ -352,7 +354,8 @@ sw image "PROMPT" [--model nano-banana-2.1|nano-banana-pro|nano-banana-2-lite]
                   [--aspect 16:9|4:3|1:1|3:4|9:16] [--count 1-4] [--ref FILE_OR_ID ...]
                   [--size 1K|2K|4K] [--project ID] [--out DIR] [--json]
 
-sw video "PROMPT" [--model omni-flash|veo-lite|veo-fast|veo-quality] [--mode frames|ingredients]
+sw video "PROMPT" [--model omni-flash|omni-flash-1.2|veo-lite|veo-fast|veo-quality]
+                  [--mode frames|ingredients]
                   [--start FILE_OR_ID] [--end FILE_OR_ID] [--ref FILE_OR_ID ...]
                   [--aspect 16:9|9:16] [--resolution 360p|720p] [--duration 4|6|8|10]
                   [--size 720p|1080p|4K|270p] [--max-credits N] [--dry-run] [--json]
@@ -432,6 +435,8 @@ run (`--dry-run`, `dry_run=true`) shows your current price for free.
 | Image, any Nano Banana model | 0 (daily quota) |
 | Omni Flash clip, 360p, 4 s | 4 |
 | Omni Flash clip, 720p, 4 / 6 / 8 / 10 s | 7 / 10 / 12 / 15 |
+| Omni 1.2 Flash, 720p | 3 a second up to 10 s (8 s = 24), 6 a second beyond (15 s = 60) |
+| Omni 1.2 Flash, 360p | 1 a second up to 10 s, 2 a second beyond (15 s = 20) |
 | Veo 3.1 Lite / Fast / Quality, 8 s | 10 / 10 or 20 / 100 |
 
 | Google Flow Music | Credits | Time |
